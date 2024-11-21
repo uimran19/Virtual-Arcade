@@ -1,0 +1,22 @@
+body {
+    background: url(Images/arcade\ room.jpg);
+    background-size: cover;
+}
+
+.character {
+    background: url(Images/karate-belt-white-color-isolated-white-background-design-icon-japanese-martial-art-flat-style-vector-illustration_186802-5032-removebg-preview.png);
+    background-size: cover;
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    transition: transform 0.5s ease;
+}
+
+.ttc {
+    width: 80px;
+    height: 100px;
+    border: 1px solid green;
+    position: absolute;
+    top: 57%;
+    left: 5%;
+}
