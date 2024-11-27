@@ -44,12 +44,15 @@ slots.forEach((slot, index) => {
     slot.addEventListener("click", () => {
         const row = Math.floor(index / 3);
         const col = index % 3;
-        playMove(row, col, event);
+        playMove(row, col);
     });
 });
 
-function updateUIWithMove(event){
-    event.target.innerText = turn.mark
+function updateUIWithMove(row, col){
+    const slots = [...document.querySelectorAll(".slot")]
+    // find based on data-row and data-col
+    const slot = slots.find(slot => slot.dataset.row == row && slot.dataset.col == col);
+    slot.innerText = turn.mark
 }
 function isValidMove(row, col){
     return player1.moves[row][col] === null && player2.moves[row][col] === null;
@@ -102,10 +105,10 @@ function checkWinner(){
 function changeTurn(){
     turn = turn === player1 ? player2 : player1;
 }
-function playMove(row, col, event){
+function playMove(row, col){
     if(!isValidMove(row, col)) return; // Do nothing if invalid move
     updateMoveState(row, col);
-    updateUIWithMove(event)
+    updateUIWithMove(row, col)
     checkWinner(); // This will end game if there's a winner
     changeTurn();
 }
@@ -114,27 +117,39 @@ function playMove(row, col, event){
 
 
 
-const SpeechRecognition =
-  window.SpeechRecognition || window.webkitSpeechRecognition;
-const SpeechGrammarList =
-  window.SpeechGrammarList || window.webkitSpeechGrammarList;
-const SpeechRecognitionEvent =
-  window.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const SpeechGrammarList = window.SpeechGrammarList || window.webkitSpeechGrammarList;
+const SpeechRecognitionEvent = window.SpeechRecognitionEvent || window.webkitSpeechRecognitionEvent;
 
 
-const recocnizedMoves = [
-    'top left',
-    'top middle',
-    'top right',
-    'middle left',
-    'middle middle',
-    'middle right',
-    'bottom left',
-    'bottom middle',
-    'bottom right'
-    // Extend this list as needed... (synonyms, etc)
-];
-const grammar = `#JSGF V1.0; grammar colors; public <color> = ${recocnizedMoves.join(
+
+
+const movesMap = {
+    // top left
+    'top left': [0, 0],
+    // top middle
+    'top middle': [0, 1],
+    // top right
+    'top right': [0, 2],
+    // middle left
+    'middle left': [1, 0],
+    // centre
+    'centre': [1, 1],
+    'santa': [1, 1],
+    // middle right
+    'middle right': [1, 2],
+    // bottom left
+    'bottom left': [2, 0],
+    // bottom middle
+    'bottom middle': [2, 1],
+    // bottom right
+    'bottom right': [2, 2]
+}
+
+const recognizedMoves = Object.keys(movesMap);
+
+
+const grammar = `#JSGF V1.0; grammar colors; public <color> = ${recognizedMoves.join(
     " | ",
   )};`;
 
@@ -144,7 +159,7 @@ speechRecognitionList.addFromString(grammar, 1);
 
 recognition.grammars = speechRecognitionList;
 recognition.continuous = false;
-recognition.lang = "en-US";
+recognition.lang = "en-GB";
 recognition.interimResults = false;
 recognition.maxAlternatives = 1;
 
@@ -158,16 +173,23 @@ recogButton.addEventListener("click", () => {
 recognition.onresult = (event) => {
     console.log("Result received.", event.results);
     const move = event.results[0][0].transcript;
-    console.log(`Move received: ${move}.`)
-    console.log(`Confidence: ${event.results[0][0].confidence}`);
+    const [row, col] = convertTextToValidMove(move);
+    playMove(row, col);
+    recognition.stop();
+    setTimeout(() => {
+        recognition.start();
+    }, 1000);
   };
 
 
-function convertTextToValidMove(spokenText){
+
+
+  function convertTextToValidMove(spokenText){
+    console.log("Spoken text:", spokenText);
     // takes in a string and returns a valid move with row and col
     // e.g. top left -> [0,0]
     // e.g. bottom right -> [2,2]
-
-
+    if (!recognizedMoves.includes(spokenText.toLowerCase())) throw new Error("Invalid move. Please try again.");
+    return movesMap[spokenText.toLowerCase()];
     // BONUS: If spokenText is not valid, make the computer speak "Invalid move. Please try again."
 }
